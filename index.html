@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Education Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Auth Screen */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .auth-content {
+            padding: 30px;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Main App Layout */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .app-container.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .user-profile {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-profile strong {
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .user-profile p {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+            color: #667eea;
+            border-left: 4px solid #667eea;
+        }
+
+        .nav-icon {
+            font-size: 1.3em;
+        }
+
+        .logout-section {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-logout {
+            width: 100%;
+            padding: 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: #f5f6fa;
+            overflow-y: auto;
+        }
+
+        .content-header {
+            background: white;
+            padding: 25px 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-header h1 {
+            color: #333;
+            font-size: 2em;
+        }
+
+        .content-body {
+            padding: 30px 40px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .course-card h4 {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .course-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .course-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 250px);
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 15px;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant {
+            background: white;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-meta {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.85em;
+        }
+
+        .message.assistant .message-meta {
+            border-top-color: #e0e0e0;
+            color: #666;
+        }
+
+        .chat-input-area {
+            padding: 20px 25px;
+            background: white;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-input-area textarea {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            resize: none;
+            font-family: inherit;
+            font-size: 1em;
+        }
+
+        .chat-input-area textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-send {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Materials List */
+        .materials-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .material-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .material-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .material-info p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* File Upload */
+        .file-upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .file-upload-area:hover {
+            background: #e9ecef;
+            border-color: #764ba2;
+        }
+
+        .file-upload-area.dragover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #764ba2;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-area input[type="file"] {
+            display: none;
+        }
+
+        /* Alert/Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.info { background: #17a2b8; }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                left: -100%;
+                transition: left 0.3s;
+                z-index: 100;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content-body {
+                padding: 20px;
+            }
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .course-select {
+            margin-bottom: 20px;
+        }
+
+        .course-select select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h1>🎓 RAG Education</h1>
+                <p>Learn Smarter with AI-Powered Course Assistant</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+            </div>
+
+            <div class="auth-content">
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required placeholder="your.email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="regEmail" required placeholder="your.email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="regPassword" required placeholder="Create a password">
+                    </div>
+                    <div class="form-group">
+                        <label>I am a</label>
+                        <select id="regType" required>
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="appScreen" class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 RAG Education</h2>
+                <p>AI-Powered Learning</p>
+            </div>
+
+            <div class="user-profile" id="userProfile"></div>
+
+            <nav class="nav-menu" id="navMenu"></nav>
+
+            <div class="logout-section">
+                <button class="btn-logout" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="content-header">
+                <h1 id="contentTitle">Dashboard</h1>
+            </div>
+
+            <div class="content-body">
+                <!-- Student: My Courses Screen -->
+                <div id="studentCoursesScreen" class="screen">
+                    <div class="card">
+                        <h3>📚 Browse Available Courses</h3>
+                        <div class="form-group">
+                            <label>Enter Course ID to Enroll</label>
+                            <input type="number" id="enrollCourseId" placeholder="e.g., 1">
+                        </div>
+                        <button class="btn" onclick="enrollInCourse()">Enroll in Course</button>
+                    </div>
+
+                    <h3 style="margin: 30px 0 20px 0; color: #333;">My Enrolled Courses</h3>
+                    <div id="studentCoursesList" class="course-grid"></div>
+                </div>
+
+                <!-- Student: Chat Screen -->
+                <div id="studentChatScreen" class="screen">
+                    <div class="course-select">
+                        <label><strong>Select Course:</strong></label>
+                        <select id="chatCourseSelect" onchange="loadChatForCourse()">
+                            <option value="">Choose a course to chat...</option>
+                        </select>
+                    </div>
+
+                    <div id="chatContainer" style="display: none;">
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <h3 id="chatCourseName">Course Chat</h3>
+                            </div>
+                            <div class="chat-messages" id="chatMessages"></div>
+                            <div class="chat-input-area">
+                                <textarea id="chatInput" rows="2" placeholder="Ask a question about the course materials..."></textarea>
+                                <button class="btn-send" onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="noCourseSelected" class="empty-state">
+                        <div class="empty-state-icon">💬</div>
+                        <h3>Select a course to start chatting</h3>
+                        <p>Choose a course from the dropdown above to ask questions about course materials</p>
+                    </div>
+                </div>
+
+                <!-- Teacher: My Courses Screen -->
+                <div id="teacherCoursesScreen" class="screen">
+                    <div class="card">
+                        <h3>➕ Create New Course</h3>
+                        <div class="form-group">
+                            <label>Course Name</label>
+                            <input type="text" id="courseName" placeholder="e.g., Introduction to Python">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" id="courseDesc" placeholder="Brief course description">
+                        </div>
+                        <button class="btn" onclick="createCourse()">Create Course</button>
+                    </div>
+
+                    <h3 style="margin: 30px 0 20px 0; color: #333;">My Teaching Courses</h3>
+                    <div id="teacherCoursesList" class="course-grid"></div>
+                </div>
+
+                <!-- Teacher: Upload Materials Screen -->
+                <div id="teacherMaterialsScreen" class="screen">
+                    <div class="course-select">
+                        <label><strong>Select Course:</strong></label>
+                        <select id="uploadCourseSelect" onchange="loadMaterialsForCourse()">
+                            <option value="">Choose a course...</option>
+                        </select>
+                    </div>
+
+                    <div id="uploadSection" style="display: none;">
+                        <div class="card">
+                            <h3>📤 Upload Course Material</h3>
+                            <div class="file-upload-area" onclick="document.getElementById('materialFile').click()">
+                                <div class="upload-icon">📄</div>
+                                <h4>Click to upload PDF</h4>
+                                <p>or drag and drop here</p>
+                                <p id="selectedFileName" style="margin-top: 15px; color: #667eea; font-weight: 600;"></p>
+                                <input type="file" id="materialFile" accept=".pdf" onchange="handleFileSelect()">
+                            </div>
+                            <button class="btn" onclick="uploadMaterial()" style="margin-top: 20px;">Upload Material</button>
+                        </div>
+
+                        <h3 style="margin: 30px 0 20px 0; color: #333;">Course Materials</h3>
+                        <div id="materialsList" class="materials-list"></div>
+                    </div>
+
+                    <div id="noUploadCourse" class="empty-state">
+                        <div class="empty-state-icon">📚</div>
+                        <h3>Select a course to manage materials</h3>
+                        <p>Choose a course from the dropdown above</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        let authToken = null;
+        let currentUser = null;
+        let selectedChatCourse = null;
+        let selectedUploadCourse = null;
+
+        // Initialize
+        window.onload = () => {
+            authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                loadCurrentUser();
+            }
+        };
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // Auth Tab Switch
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Form').classList.add('active');
+        }
+
+        // API Call Helper
+        async function apiCall(endpoint, method = 'GET', body = null, isFormData = false) {
+            const options = { method, headers: {} };
+
+            if (authToken) {
+                options.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            if (body && !isFormData) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            } else if (body && isFormData) {
+                options.body = body;
+            }
+
+            const response = await fetch(`${API_URL}${endpoint}`, options);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.detail || 'Request failed');
+            }
+            
+            return data;
+        }
+
+        // Handle Register
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const type = document.getElementById('regType').value;
+
+            try {
+                await apiCall('/register', 'POST', { name, email, password, type });
+                showToast('Registration successful! Please login.', 'success');
+                switchAuthTab('login');
+                document.getElementById('registerForm').reset();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Handle Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const formData = new URLSearchParams();
+            formData.append('username', email);
+            formData.append('password', password);
+
+            try {
+                const response = await fetch(`${API_URL}/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Login failed');
+                }
+
+                authToken = data.access_token;
+                localStorage.setItem('authToken', authToken);
+                await loadCurrentUser();
+                showToast('Login successful!', 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Load Current User
+        async function loadCurrentUser() {
+            try {
+                currentUser = await apiCall('/me');
+                showAppScreen();
+            } catch (error) {
+                handleLogout();
+            }
+        }
+
+        // Show App Screen
+        function showAppScreen() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'flex';
+            document.getElementById('appScreen').classList.add('active');
+
+            // Update user profile
+            const profile = document.getElementById('userProfile');
+            profile.innerHTML = `
+                <strong>${currentUser.name}</strong>
+                <p>${currentUser.email}</p>
+                <p style="color: #667eea; font-weight: 600;">${currentUser.type.toUpperCase()}</p>
+            `;
+
+            // Build navigation
+            buildNavigation();
+            
+            // Load initial screen based on user type
+            setTimeout(() => {
+                if (currentUser.type === 'student') {
+                    showScreen('studentCourses');
+                } else {
+                    showScreen('teacherCourses');
+                }
+            }, 100);
+        }
+
+        // Build Navigation
+        function buildNavigation() {
+            const navMenu = document.getElementById('navMenu');
+            
+            if (currentUser.type === 'student') {
+                navMenu.innerHTML = `
+                    <div class="nav-item active" onclick="showScreen('studentCourses', this)">
+                        <span class="nav-icon">📚</span>
+                        <span>My Courses</span>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('studentChat', this)">
+                        <span class="nav-icon">💬</span>
+                        <span>Chat with Materials</span>
+                    </div>
+                `;
+            } else {
+                navMenu.innerHTML = `
+                    <div class="nav-item active" onclick="showScreen('teacherCourses', this)">
+                        <span class="nav-icon">📚</span>
+                        <span>My Courses</span>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('teacherMaterials', this)">
+                        <span class="nav-icon">📄</span>
+                        <span>Upload Materials</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Show Screen
+        function showScreen(screenName, clickedElement = null) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            if (clickedElement) {
+                clickedElement.closest('.nav-item').classList.add('active');
+            } else {
+                // If no element clicked, activate by screen name
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach((item, index) => {
+                    if ((screenName === 'studentCourses' && index === 0) ||
+                        (screenName === 'studentChat' && index === 1) ||
+                        (screenName === 'teacherCourses' && index === 0) ||
+                        (screenName === 'teacherMaterials' && index === 1)) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+
+            const screenMap = {
+                'studentCourses': { id: 'studentCoursesScreen', title: 'My Courses', load: loadStudentCourses },
+                'studentChat': { id: 'studentChatScreen', title: 'Chat with Materials', load: loadChatCourses },
+                'teacherCourses': { id: 'teacherCoursesScreen', title: 'My Teaching Courses', load: loadTeacherCourses },
+                'teacherMaterials': { id: 'teacherMaterialsScreen', title: 'Course Materials', load: loadUploadCourses }
+            };
+
+            const screen = screenMap[screenName];
+            if (screen) {
+                document.getElementById('contentTitle').textContent = screen.title;
+                document.getElementById(screen.id).classList.add('active');
+                if (screen.load) screen.load();
+            }
+        }
+
+        // Handle Logout
+        function handleLogout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            document.getElementById('appScreen').classList.remove('active');
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('loginForm').reset();
+            showToast('Logged out successfully', 'info');
+        }
+
+        // ========== STUDENT FUNCTIONS ==========
+
+        // Load Student Courses
+        async function loadStudentCourses() {
+            try {
+                const courses = await apiCall('/courses');
+                const container = document.getElementById('studentCoursesList');
+                
+                if (courses.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <h3>No courses enrolled yet</h3>
+                            <p>Enter a course ID above to enroll</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = courses.map(course => `
+                    <div class="course-card">
+                        <h4>${course.name}</h4>
+                        <p>${course.description || 'No description available'}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <span class="course-badge">ID: ${course.id}</span>
+                            <button class="btn btn-small" onclick="selectCourseForChat(${course.id}, '${course.name}')">
+                                💬 Chat
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Enroll in Course
+        async function enrollInCourse() {
+            const courseId = document.getElementById('enrollCourseId').value;
+            
+            if (!courseId) {
+                showToast('Please enter a course ID', 'error');
+                return;
+            }
+
+            try {
+                await apiCall(`/courses/${courseId}/enroll`, 'POST');
+                showToast('Successfully enrolled in course!', 'success');
+                document.getElementById('enrollCourseId').value = '';
+                loadStudentCourses();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Load Chat Courses
+        async function loadChatCourses() {
+            try {
+                const courses = await apiCall('/courses');
+                const select = document.getElementById('chatCourseSelect');
+                
+                if (courses.length === 0) {
+                    select.innerHTML = '<option value="">No courses enrolled</option>';
+                    return;
+                }
+
+                select.innerHTML = '<option value="">Choose a course to chat...</option>' +
+                    courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Select Course for Chat
+        function selectCourseForChat(courseId, courseName) {
+            showScreen('studentChat');
+            document.getElementById('chatCourseSelect').value = courseId;
+            loadChatForCourse();
+        }
+
+        // Load Chat for Course
+        async function loadChatForCourse() {
+            const courseId = document.getElementById('chatCourseSelect').value;
+            
+            if (!courseId) {
+                document.getElementById('chatContainer').style.display = 'none';
+                document.getElementById('noCourseSelected').style.display = 'block';
+                return;
+            }
+
+            selectedChatCourse = courseId;
+            document.getElementById('chatContainer').style.display = 'block';
+            document.getElementById('noCourseSelected').style.display = 'none';
+            
+            const courseName = document.getElementById('chatCourseSelect').options[
+                document.getElementById('chatCourseSelect').selectedIndex
+            ].text;
+            document.getElementById('chatCourseName').textContent = courseName;
+
+            // Load chat history
+            try {
+                const history = await apiCall(`/courses/${courseId}/chat/history`);
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+
+                if (history.length > 0) {
+                    history.reverse().forEach(chat => {
+                        addMessageToChat(chat.question, 'user');
+                        addMessageToChat(
+                            chat.answer, 
+                            'assistant', 
+                            JSON.parse(chat.sources), 
+                            parseFloat(chat.confidence)
+                        );
+                    });
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 40px;">
+                            <p>No chat history yet. Start by asking a question!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Send Message
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const question = input.value.trim();
+
+            if (!question || !selectedChatCourse) {
+                showToast('Please enter a question', 'error');
+                return;
+            }
+
+            addMessageToChat(question, 'user');
+            input.value = '';
+
+            try {
+                const response = await apiCall(`/courses/${selectedChatCourse}/chat`, 'POST', {
+                    question,
+                    course_id: parseInt(selectedChatCourse)
+                });
+
+                addMessageToChat(response.answer, 'assistant', response.sources, response.confidence);
+            } catch (error) {
+                showToast(error.message, 'error');
+                addMessageToChat('Sorry, there was an error processing your question.', 'assistant');
+            }
+        }
+
+        // Add Message to Chat
+        function addMessageToChat(text, type, sources = [], confidence = null) {
+            const container = document.getElementById('chatMessages');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            
+            let html = `<div>${text}</div>`;
+            
+            if (sources && sources.length > 0) {
+                html += `<div class="message-meta"><strong>📚 Sources:</strong> ${sources.join(', ')}</div>`;
+            }
+            
+            if (confidence !== null) {
+                const confidencePercent = (confidence * 100).toFixed(1);
+                html += `<div class="message-meta"><strong>✓ Confidence:</strong> ${confidencePercent}%</div>`;
+            }
+            
+            message.innerHTML = html;
+            container.appendChild(message);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Enter key support for chat
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        });
+
+        // ========== TEACHER FUNCTIONS ==========
+
+        // Load Teacher Courses
+        async function loadTeacherCourses() {
+            try {
+                const courses = await apiCall('/courses');
+                const container = document.getElementById('teacherCoursesList');
+                
+                if (courses.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <h3>No courses created yet</h3>
+                            <p>Create your first course above</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = courses.map(course => `
+                    <div class="course-card">
+                        <h4>${course.name}</h4>
+                        <p>${course.description || 'No description available'}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <span class="course-badge">ID: ${course.id}</span>
+                            <button class="btn btn-small" onclick="selectCourseForUpload(${course.id}, '${course.name}')">
+                                📤 Upload Materials
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Create Course
+        async function createCourse() {
+            const name = document.getElementById('courseName').value;
+            const description = document.getElementById('courseDesc').value;
+
+            if (!name) {
+                showToast('Please enter a course name', 'error');
+                return;
+            }
+
+            try {
+                await apiCall('/courses', 'POST', { name, description });
+                showToast('Course created successfully!', 'success');
+                document.getElementById('courseName').value = '';
+                document.getElementById('courseDesc').value = '';
+                loadTeacherCourses();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Load Upload Courses
+        async function loadUploadCourses() {
+            try {
+                const courses = await apiCall('/courses');
+                const select = document.getElementById('uploadCourseSelect');
+                
+                if (courses.length === 0) {
+                    select.innerHTML = '<option value="">No courses created</option>';
+                    return;
+                }
+
+                select.innerHTML = '<option value="">Choose a course...</option>' +
+                    courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Select Course for Upload
+        function selectCourseForUpload(courseId, courseName) {
+            showScreen('teacherMaterials');
+            document.getElementById('uploadCourseSelect').value = courseId;
+            loadMaterialsForCourse();
+        }
+
+        // Load Materials for Course
+        async function loadMaterialsForCourse() {
+            const courseId = document.getElementById('uploadCourseSelect').value;
+            
+            if (!courseId) {
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('noUploadCourse').style.display = 'block';
+                return;
+            }
+
+            selectedUploadCourse = courseId;
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('noUploadCourse').style.display = 'none';
+
+            try {
+                const materials = await apiCall(`/courses/${courseId}/materials`);
+                const container = document.getElementById('materialsList');
+                
+                if (materials.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📄</div>
+                            <h3>No materials uploaded yet</h3>
+                            <p>Upload your first course material above</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = materials.map(mat => `
+                    <div class="material-item">
+                        <div class="material-info">
+                            <h4>📄 ${mat.name}</h4>
+                            <p><strong>Chunks:</strong> ${mat.chunks_count} | <strong>Uploaded:</strong> ${new Date(mat.uploaded_at).toLocaleDateString()}</p>
+                        </div>
+                        <span class="course-badge">ID: ${mat.id}</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Handle File Select
+        function handleFileSelect() {
+            const fileInput = document.getElementById('materialFile');
+            const fileName = document.getElementById('selectedFileName');
+            
+            if (fileInput.files.length > 0) {
+                fileName.textContent = `Selected: ${fileInput.files[0].name}`;
+            } else {
+                fileName.textContent = '';
+            }
+        }
+
+        // Upload Material
+        async function uploadMaterial() {
+            const fileInput = document.getElementById('materialFile');
+            const file = fileInput.files[0];
+
+            if (!file || !selectedUploadCourse) {
+                showToast('Please select a file and course', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await apiCall(`/courses/${selectedUploadCourse}/upload`, 'POST', formData, true);
+                showToast(`Material uploaded! ${response.chunks_created} chunks created.`, 'success');
+                fileInput.value = '';
+                document.getElementById('selectedFileName').textContent = '';
+                loadMaterialsForCourse();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Drag and drop support
+        const fileUploadArea = document.querySelector('.file-upload-area');
+        if (fileUploadArea) {
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('dragover');
+            });
+
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('dragover');
+            });
+
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type === 'application/pdf') {
+                    document.getElementById('materialFile').files = files;
+                    handleFileSelect();
+                } else {
+                    showToast('Please drop a PDF file', 'error');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
