@@ -108,7 +108,9 @@ async def startup_event():
     
     # Initialize ChromaDB
     print("🗄 Setting up ChromaDB...")
-    chroma_client = chromadb.Client()
+    #chroma_client = chromadb.Client()
+    persist_directory = "./chroma_db"
+    chroma_client = chromadb.PersistentClient(path=persist_directory)
     
     # Initialize OpenAI
     if os.getenv("OPENAI_API_KEY"):
