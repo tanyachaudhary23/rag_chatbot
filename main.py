@@ -1,4 +1,4 @@
-# main.py - Main Application (FULLY CORRECTED VERSION)
+# main.py - Main Application with Material Delete Function
 import tempfile
 import json
 import os
@@ -171,6 +171,23 @@ def store_document_chunks(chunks: List[str], material_id: int, collection):
         ids=ids,
         metadatas=metadatas
     )
+
+def delete_material_chunks(material_id: int, collection):
+    """Delete all chunks associated with a material from the collection"""
+    try:
+        # Get all chunk IDs for this material
+        results = collection.get(
+            where={"material_id": material_id}
+        )
+        
+        if results and results['ids']:
+            # Delete all chunks
+            collection.delete(ids=results['ids'])
+            return len(results['ids'])
+        return 0
+    except Exception as e:
+        print(f"Error deleting chunks: {e}")
+        return 0
 
 def retrieve_relevant_chunks(query: str, collection, n_results: int = 3):
     """Retrieve relevant chunks from course collection"""
@@ -420,6 +437,50 @@ def upload_material(
         if os.path.exists(temp_file_path):
             os.unlink(temp_file_path)
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@app.delete("/api/materials/{material_id}")
+def delete_material(
+    material_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a material (teachers only)"""
+    # Get the material
+    material = db.query(Material).filter(Material.id == material_id).first()
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+    
+    # Get the course
+    course = db.query(Course).filter(Course.id == material.course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Check if user is the teacher of this course
+    if current_user.type != "teacher" or course.teacher_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the course teacher can delete materials")
+    
+    try:
+        # Delete chunks from ChromaDB
+        collection = get_or_create_collection(material.course_id)
+        chunks_deleted = delete_material_chunks(material_id, collection)
+        
+        # Delete the physical file
+        if os.path.exists(material.file_path):
+            os.unlink(material.file_path)
+        
+        # Delete from database
+        db.delete(material)
+        db.commit()
+        
+        return {
+            "message": "Material deleted successfully",
+            "material_id": material_id,
+            "chunks_deleted": chunks_deleted
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error deleting material: {str(e)}")
 
 # ==================== CHAT ENDPOINTS ====================
 

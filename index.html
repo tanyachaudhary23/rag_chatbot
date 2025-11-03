@@ -467,6 +467,11 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .material-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .material-info h4 {
@@ -477,6 +482,36 @@
         .material-info p {
             color: #666;
             font-size: 0.9em;
+        }
+
+        .material-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-delete {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-delete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* File Upload */
@@ -606,6 +641,82 @@
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 1em;
+        }
+
+        /* Confirmation Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-content h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-confirm {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #c82333;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
         }
     </style>
 </head>
@@ -788,12 +899,25 @@
         </div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>⚠️ Confirm Deletion</h3>
+            <p id="confirmMessage">Are you sure you want to delete this material?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'http://localhost:8000/api';
         let authToken = null;
         let currentUser = null;
         let selectedChatCourse = null;
         let selectedUploadCourse = null;
+        let materialToDelete = null;
 
         // Initialize
         window.onload = () => {
@@ -1313,7 +1437,12 @@
                             <h4>📄 ${mat.name}</h4>
                             <p><strong>Chunks:</strong> ${mat.chunks_count} | <strong>Uploaded:</strong> ${new Date(mat.uploaded_at).toLocaleDateString()}</p>
                         </div>
-                        <span class="course-badge">ID: ${mat.id}</span>
+                        <div class="material-actions">
+                            <span class="course-badge">ID: ${mat.id}</span>
+                            <button class="btn-delete" onclick="showDeleteConfirmation(${mat.id}, '${mat.name}')">
+                                🗑️ Delete
+                            </button>
+                        </div>
                     </div>
                 `).join('');
             } catch (error) {
@@ -1357,6 +1486,35 @@
             }
         }
 
+        // Show Delete Confirmation Modal
+        function showDeleteConfirmation(materialId, materialName) {
+            materialToDelete = materialId;
+            document.getElementById('confirmMessage').textContent = 
+                `Are you sure you want to delete "${materialName}"? This action cannot be undone and will remove all associated chunks from the vector database.`;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        // Close Confirmation Modal
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            materialToDelete = null;
+        }
+
+        // Confirm Delete
+        async function confirmDelete() {
+            if (!materialToDelete) return;
+
+            try {
+                const response = await apiCall(`/materials/${materialToDelete}`, 'DELETE');
+                showToast(`Material deleted! ${response.chunks_deleted} chunks removed.`, 'success');
+                closeConfirmModal();
+                loadMaterialsForCourse();
+            } catch (error) {
+                showToast(error.message, 'error');
+                closeConfirmModal();
+            }
+        }
+
         // Drag and drop support
         const fileUploadArea = document.querySelector('.file-upload-area');
         if (fileUploadArea) {
@@ -1382,6 +1540,13 @@
                 }
             });
         }
+
+        // Close modal when clicking outside
+        document.getElementById('confirmModal').addEventListener('click', (e) => {
+            if (e.target.id === 'confirmModal') {
+                closeConfirmModal();
+            }
+        });
     </script>
 </body>
 </html>
